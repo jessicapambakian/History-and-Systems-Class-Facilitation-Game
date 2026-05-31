@@ -1,0 +1,366 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Clinical Psychology Game</title></head><body>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+  body { background: #fff; color: #1a1a1a; }
+  .game-wrap { padding: 1.5rem 0; max-width: 680px; margin: 0 auto; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .pill { display: inline-block; font-size: 12px; padding: 4px 14px; border-radius: 20px; font-weight: 600; margin-bottom: 1rem; letter-spacing: 0.04em; text-transform: uppercase; }
+  .pill-wyr { background: #ede9fe; color: #5b21b6; }
+  .pill-spot { background: #d1fae5; color: #065f46; }
+  .pill-done { background: #fef3c7; color: #92400e; }
+  .pill-disc { background: #fce7f3; color: #9d174d; }
+
+  .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 1.75rem; margin-bottom: 1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+
+  .intro-card { background: linear-gradient(135deg, #6d28d9 0%, #4f46e5 60%, #0891b2 100%); border: none; border-radius: 20px; padding: 2rem; color: #fff; }
+  .intro-title { font-size: 24px; font-weight: 600; color: #fff; margin-bottom: 0.6rem; }
+  .intro-sub { font-size: 15px; color: rgba(255,255,255,0.85); line-height: 1.65; margin-bottom: 1.75rem; }
+  .btn-start { background: #fff; border: none; border-radius: 10px; padding: 10px 22px; font-size: 14px; font-weight: 600; cursor: pointer; color: #4f46e5; font-family: 'Inter', sans-serif; transition: opacity 0.15s; }
+  .btn-start:hover { opacity: 0.9; }
+
+  .q-text { font-size: 15px; font-weight: 500; color: #111; line-height: 1.65; margin-bottom: 1.25rem; }
+  .context-note { font-size: 13px; color: #6b7280; line-height: 1.6; background: #f9fafb; border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 1.25rem; border-left: 3px solid #c4b5fd; }
+  .context-note.green-border { border-left-color: #6ee7b7; }
+  .context-note.pink-border { border-left-color: #f9a8d4; }
+
+  .wyr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .wyr-btn { background: #fafafa; border: 1.5px solid #e5e7eb; border-radius: 12px; padding: 1rem; text-align: left; cursor: pointer; font-size: 13px; color: #374151; line-height: 1.55; transition: border-color 0.15s, background 0.15s; font-family: 'Inter', sans-serif; }
+  .wyr-btn:hover { border-color: #a78bfa; background: #f5f3ff; }
+  .wyr-btn.sel-a { border: 2px solid #7c3aed; background: #ede9fe; color: #3b0764; }
+  .wyr-btn.sel-b { border: 2px solid #059669; background: #d1fae5; color: #064e3b; }
+  .wyr-label { font-size: 11px; font-weight: 600; letter-spacing: 0.07em; margin-bottom: 6px; text-transform: uppercase; }
+  .la { color: #7c3aed; } .lb { color: #059669; }
+
+  .reveal-box { border-radius: 12px; padding: 1.1rem 1.25rem; margin-top: 1.25rem; display: none; }
+  .reveal-box.purple { background: #f5f3ff; border-left: 4px solid #7c3aed; }
+  .reveal-box.green { background: #ecfdf5; border-left: 4px solid #059669; }
+  .reveal-box.show { display: block; }
+  .reveal-box p { font-size: 14px; color: #374151; line-height: 1.7; }
+  .reveal-box strong { color: #111; }
+  .reveal-box em { color: #374151; font-style: italic; }
+  .it-depends { font-size: 16px; font-weight: 600; color: #7c3aed; margin-bottom: 0.6rem; }
+
+  .spot-opts { display: flex; flex-direction: column; gap: 8px; margin-top: 1rem; }
+  .spot-btn { background: #fafafa; border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 0.85rem 1rem; cursor: pointer; font-size: 14px; color: #374151; text-align: left; transition: border-color 0.15s, background 0.15s; font-family: 'Inter', sans-serif; }
+  .spot-btn:hover { border-color: #6ee7b7; background: #f0fdf4; }
+  .spot-btn.correct { border: 2px solid #059669; background: #d1fae5; color: #064e3b; font-weight: 500; }
+  .spot-btn.wrong { border: 2px solid #dc2626; background: #fee2e2; color: #7f1d1d; }
+  .answered { pointer-events: none; }
+
+  .nav-row { display: flex; gap: 10px; margin-top: 1.25rem; justify-content: flex-end; align-items: center; }
+  .btn-next { background: #fff; border: 1.5px solid #d1d5db; border-radius: 10px; padding: 8px 20px; font-size: 14px; cursor: pointer; color: #374151; font-family: 'Inter', sans-serif; font-weight: 500; }
+  .btn-next:hover { background: #f9fafb; border-color: #9ca3af; }
+  .btn-reveal { background: #ede9fe; border: 1.5px solid #c4b5fd; border-radius: 10px; padding: 8px 20px; font-size: 14px; cursor: pointer; color: #5b21b6; font-family: 'Inter', sans-serif; font-weight: 500; }
+  .btn-reveal:hover { background: #ddd6fe; }
+  .btn-pink { background: #fce7f3; border: 1.5px solid #f9a8d4; border-radius: 10px; padding: 8px 20px; font-size: 14px; cursor: pointer; color: #9d174d; font-family: 'Inter', sans-serif; font-weight: 500; }
+  .btn-pink:hover { background: #fbcfe8; }
+
+  .dots { display: flex; gap: 7px; margin-bottom: 1.25rem; align-items: center; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #e5e7eb; transition: background 0.2s; }
+  .dot.done { background: #059669; }
+  .dot.cur { background: #7c3aed; }
+  .dot.disc { background: #db2777; }
+
+  .wyr-tally { font-size: 13px; color: #9ca3af; margin-right: auto; font-style: italic; }
+
+  .final-card { background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #0f766e 100%); border: none; border-radius: 20px; padding: 2rem; color: #fff; }
+  .final-label { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+  .final-score-big { font-size: 52px; font-weight: 600; color: #fff; margin: 0.4rem 0 0.6rem; }
+  .final-sub { font-size: 15px; color: rgba(255,255,255,0.85); line-height: 1.6; margin-bottom: 1.5rem; }
+  .summary-row { display: flex; gap: 10px; margin-bottom: 1.5rem; }
+  .summary-chip { flex: 1; background: rgba(255,255,255,0.15); border-radius: 12px; padding: 0.85rem 1rem; text-align: center; }
+  .chip-label { font-size: 12px; color: rgba(255,255,255,0.7); margin-bottom: 4px; }
+  .chip-val { font-size: 20px; font-weight: 600; color: #fff; }
+  .closing { font-size: 14px; color: rgba(255,255,255,0.8); line-height: 1.75; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.2); }
+  .closing em { color: #fff; font-style: italic; }
+
+  .disc-card { background: linear-gradient(135deg, #831843 0%, #9d174d 50%, #be185d 100%); border: none; border-radius: 20px; padding: 2rem; color: #fff; margin-bottom: 1rem; }
+  .disc-number { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.7); margin-bottom: 0.5rem; }
+  .disc-title { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 0.75rem; }
+  .disc-text { font-size: 14px; color: rgba(255,255,255,0.88); line-height: 1.75; margin-bottom: 1.5rem; }
+  .disc-cta { font-size: 13px; color: rgba(255,255,255,0.7); font-style: italic; }
+</style>
+
+<div class="game-wrap">
+
+  <div class="screen active" id="s-intro">
+    <div class="card intro-card">
+      <p class="intro-title">What would you actually do?</p>
+      <p class="intro-sub">You've just heard from your classmates about Witmer, Jones, and how their work built the foundation of modern clinical psychology. Now it's your turn!</p>
+      <button class="btn-start" onclick="goTo('s-wyr1')">Let's go ></button>
+    </div>
+  </div>
+
+  <div class="screen" id="s-wyr1">
+    <div class="pill pill-wyr">Would you rather — 1 of 2</div>
+    <div class="dots" id="d1"></div>
+    <div class="card">
+      <div class="context-note">You're a trainee at a community mental health clinic. A 9-year-old is referred for severe school refusal — three weeks of daily meltdowns at drop-off, stomach aches, crying. The presenting problem looks like a mix of separation anxiety and a possible specific phobia of the school bathroom after one bad incident six months ago. Your supervisor gives you the first session.</div>
+      <p class="q-text">Do you spend the first session building a full picture — talking to parents, requesting teacher input, coordinating with the pediatrician — or do you start a structured behavioral intervention on the bathroom fear right now, because every week of avoidance is strengthening the phobia?</p>
+      <div class="wyr-grid">
+        <button class="wyr-btn" id="w1a" onclick="pickWyr(1,'a')">
+          <div class="wyr-label la">Option A — Witmer's instinct</div>
+          Full intake first. I need to understand what's actually driving this before I touch anything. The phobia might be a symptom of something bigger.
+        </button>
+        <button class="wyr-btn" id="w1b" onclick="pickWyr(1,'b')">
+          <div class="wyr-label lb">Option B — Jones's instinct</div>
+          Start exposure now. Avoidance is the mechanism — every day we wait, the fear gets more entrenched. Assessment can run in parallel.
+        </button>
+      </div>
+      <div class="reveal-box purple" id="rv-wyr1">
+        <p class="it-depends">It depends.</p>
+        <p><strong>And that's not a cop-out — it's the real clinical answer.</strong> Option A is cautious and Witmer would approve: you can't treat what you don't fully understand, and the bathroom fear might be masking a trauma response that exposure could actually worsen. Option B is empirically grounded: avoidance does maintain phobias, and delay has real costs when a kid is missing school every day.</p>
+        <p style="margin-top: 0.75rem;"><em>Most modern evidence-based protocols do a brief functional assessment first, then intervene fast. The Witmer/Jones split isn't always sequential — it's often simultaneous. But if you had to lead with one? That's the real judgment call — and it changes case by case.</em></p>
+      </div>
+    </div>
+    <div class="nav-row">
+      <span class="wyr-tally" id="wt1"></span>
+      <button class="btn-reveal" id="rb-wyr1" onclick="revealWyr(1)" style="display:none;">Reveal ></button>
+      <button class="btn-next" id="nb-wyr1" onclick="goTo('s-wyr2')" style="display:none;">Next ></button>
+    </div>
+  </div>
+
+  <div class="screen" id="s-wyr2">
+    <div class="pill pill-wyr">Would you rather — 2 of 2</div>
+    <div class="dots" id="d2"></div>
+    <div class="card">
+      <div class="context-note">You're presenting a case to your supervision group. Your client has a documented specific phobia significantly impairing their functioning. You've done a thorough biopsychosocial intake and have a clear picture. Your supervisor asks: "What's your treatment plan?"</div>
+      <p class="q-text">A colleague argues for systematic desensitization — graduated exposure with relaxation training, rooted directly in Jones's work. Another argues for inhibitory learning exposure — no relaxation, just violating the expectancy of danger, the current gold standard. Your supervisor wants your opinion. Which do you back?</p>
+      <div class="wyr-grid">
+        <button class="wyr-btn" id="w2a" onclick="pickWyr(2,'a')">
+          <div class="wyr-label la">Option A — Classic systematic desensitization</div>
+          Jones's method, Wolpe's formalization. Pair exposure with relaxation. Counter-condition the fear response. It's been working for decades.
+        </button>
+        <button class="wyr-btn" id="w2b" onclick="pickWyr(2,'b')">
+          <div class="wyr-label lb">Option B — Inhibitory learning model</div>
+          Modern exposure theory says relaxation might actually interfere. The client needs to learn the feared outcome doesn't happen — not just feel calm during it.
+        </button>
+      </div>
+      <div class="reveal-box purple" id="rv-wyr2">
+        <p class="it-depends">It depends — but this one leans toward B.</p>
+        <p><strong>Craske et al. (2014) argue that relaxation during exposure can become a safety behavior</strong>, reducing the inhibitory learning that makes exposure stick long-term. The client learns "I can handle this when I'm calm" — not "this isn't actually dangerous." That's a meaningful difference for relapse prevention.</p>
+        <p style="margin-top: 0.75rem;"><em>Jones was right that graduated exposure works — but the <strong>mechanism</strong> she thought was driving it (counter-conditioning) may not be the whole story. The field has evolved past her specific method while keeping her core insight. That's how science is supposed to work.</em></p>
+      </div>
+    </div>
+    <div class="nav-row">
+      <span class="wyr-tally" id="wt2"></span>
+      <button class="btn-reveal" id="rb-wyr2" onclick="revealWyr(2)" style="display:none;">Reveal ></button>
+      <button class="btn-next" id="nb-wyr2" onclick="goTo('s-spot1')" style="display:none;">On to Spot the Legacy ></button>
+    </div>
+  </div>
+
+  <div class="screen" id="s-spot1">
+    <div class="pill pill-spot">Spot the legacy — 1 of 3</div>
+    <div class="dots" id="d3"></div>
+    <div class="card">
+      <p class="q-text">A child psychologist receives a referral for a 7-year-old with reading difficulties and behavioral outbursts in class. Before scheduling any therapy, she requests a full psychoeducational evaluation, meets with the child's teacher and principal, consults with the pediatrician about a possible ADHD diagnosis, and asks the school social worker to assess the home environment. Only after all reports are in does she write a treatment recommendation.</p>
+      <div class="spot-opts" id="so1">
+        <button class="spot-btn" onclick="checkSpot(1,'witmer','witmer')">Witmer's legacy</button>
+        <button class="spot-btn" onclick="checkSpot(1,'jones','witmer')">Jones's legacy</button>
+        <button class="spot-btn" onclick="checkSpot(1,'both','witmer')">Both — this looks like an integration</button>
+      </div>
+      <div class="reveal-box green" id="rv-spot1">
+        <p><strong>Witmer — and pretty purely so.</strong> The multidisciplinary team assembled before any intervention is Witmer's 1896 clinic, nearly verbatim. Psychologist, physician, teacher, social worker. The instinct to understand the whole child before acting is his signature move. Jones doesn't show up here — there's no behavioral intervention anywhere in this scenario.</p>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-next" id="nb-spot1" onclick="goTo('s-spot2')" style="display:none;">Next ></button>
+    </div>
+  </div>
+
+  <div class="screen" id="s-spot2">
+    <div class="pill pill-spot">Spot the legacy — 2 of 3</div>
+    <div class="dots" id="d4"></div>
+    <div class="card">
+      <div class="context-note green-border">This one is trickier — read carefully.</div>
+      <p class="q-text">A therapist is treating a 16-year-old with a phobia of vomiting. She designs a graduated treatment plan: the teen watches videos of people feeling nauseous, then spins in a chair to induce mild dizziness, then eats slightly more than comfortable at session. There is no relaxation training. The goal is for the teen to learn that nausea doesn't mean vomiting is imminent, and that they can tolerate the sensation. The therapist explicitly tells the client not to use coping strategies during exposure.</p>
+      <div class="spot-opts" id="so2">
+        <button class="spot-btn" onclick="checkSpot(2,'witmer','jones')">Witmer's legacy</button>
+        <button class="spot-btn" onclick="checkSpot(2,'jones','jones')">Jones's legacy — direct conditioning lineage</button>
+        <button class="spot-btn" onclick="checkSpot(2,'both','jones')">Both</button>
+      </div>
+      <div class="reveal-box green" id="rv-spot2">
+        <p><strong>Jones — but with an important asterisk.</strong> This is exposure therapy, which descends directly from Jones's direct conditioning work. But notice what's <em>missing</em>: the pleasant counter-stimulus. This is the inhibitory learning model — the field evolved <em>beyond</em> Jones's specific mechanism while keeping her core insight that graduated exposure to the feared stimulus is the treatment. Her legacy is in the structure; the theory has been updated.</p>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-next" id="nb-spot2" onclick="goTo('s-spot3')" style="display:none;">Next ></button>
+    </div>
+  </div>
+
+  <div class="screen" id="s-spot3">
+    <div class="pill pill-spot">Spot the legacy — 3 of 3</div>
+    <div class="dots" id="d5"></div>
+    <div class="card">
+      <div class="context-note green-border">Last one — and the hardest.</div>
+      <p class="q-text">A clinical psychologist at a hospital-based outpatient clinic receives a referral for a 35-year-old with panic disorder. She starts with a structured diagnostic interview, consults with the referring psychiatrist about medications, and reviews previous treatment records. She then designs a 12-session CBT protocol: psychoeducation about the panic cycle, interoceptive exposure, and situational exposure to avoided places. She coordinates with the client's primary care physician throughout treatment.</p>
+      <div class="spot-opts" id="so3">
+        <button class="spot-btn" onclick="checkSpot(3,'witmer','both')">Witmer's legacy</button>
+        <button class="spot-btn" onclick="checkSpot(3,'jones','both')">Jones's legacy</button>
+        <button class="spot-btn" onclick="checkSpot(3,'both','both')">Both — fully integrated</button>
+      </div>
+      <div class="reveal-box green" id="rv-spot3">
+        <p><strong>Both — and this is what modern clinical psychology actually looks like.</strong> The diagnostic interview + physician coordination + records review = Witmer's multidisciplinary assessment model. The interoceptive and situational exposure protocol = Jones's direct conditioning lineage, updated through Wolpe to modern CBT. Neither pioneer alone gets you here. You need both — and that's not a coincidence. It's the inheritance.</p>
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="btn-next" id="nb-spot3" onclick="goTo('s-final')" style="display:none;">See your score ></button>
+    </div>
+  </div>
+
+  <div class="screen" id="s-final">
+    <div class="pill pill-done">Complete</div>
+    <div class="card final-card">
+      <p class="final-label">Spot the Legacy score</p>
+      <p class="final-score-big" id="fs">—</p>
+      <p class="final-sub" id="fm"></p>
+      <div class="summary-row">
+        <div class="summary-chip">
+          <div class="chip-label">Would You Rather</div>
+          <div class="chip-val" id="wyr-chip">2 answered</div>
+        </div>
+        <div class="summary-chip">
+          <div class="chip-label">Spot the Legacy</div>
+          <div class="chip-val" id="spot-chip">— / 3</div>
+        </div>
+      </div>
+      <div class="closing">
+        Witmer showed us how to <em>assess</em> — to see the whole person before acting. Jones showed us how to <em>intervene</em> — to take suffering seriously as something measurable and treatable. Modern clinical psychology isn't a compromise between them. It's a synthesis. And now you know where it came from.
+      </div>
+    </div>
+    <div style="margin-top: 1rem; text-align: right;">
+      <button class="btn-pink" onclick="goTo('s-disc1')">Discussion prompts ></button>
+    </div>
+  </div>
+
+  <div class="screen" id="s-disc1">
+    <div class="pill pill-disc">Discussion — 1 of 3</div>
+    <div class="dots" id="d6"></div>
+    <div class="card disc-card">
+      <p class="disc-number">Prompt 1 — Clinical Assessment</p>
+      <p class="disc-title">How does Witmer's model hold up today?</p>
+      <p class="disc-text">Witmer's original psychological clinic relied heavily on a multidisciplinary approach, utilizing physicians, social workers, and psychologists to understand a child's struggles. How does this historical model compare to your current understanding of best practices in psychological assessment? What are the practical barriers to this holistic approach today?</p>
+      <p class="disc-cta">Head to Canvas and share your thoughts on this one.</p>
+    </div>
+    <div class="nav-row">
+      <button class="btn-pink" onclick="goTo('s-disc2')">Next prompt ></button>
+    </div>
+  </div>
+
+  <div class="screen" id="s-disc2">
+    <div class="pill pill-disc">Discussion — 2 of 3</div>
+    <div class="dots" id="d7"></div>
+    <div class="card disc-card">
+      <p class="disc-number">Prompt 2 — Intervention Ethics</p>
+      <p class="disc-title">What does it cost to treat a child's fear?</p>
+      <p class="disc-text">Mary Cover Jones successfully used direct conditioning — pairing food with a feared rabbit — to alleviate Peter's phobia. When applying modern variations of these exposure-based therapies with vulnerable populations like children, what ethical considerations and potential clinical challenges must a psychologist navigate?</p>
+      <p class="disc-cta">Head to Canvas and share your thoughts on this one.</p>
+    </div>
+    <div class="nav-row">
+      <button class="btn-pink" onclick="goTo('s-disc3')">Next prompt ></button>
+    </div>
+  </div>
+
+  <div class="screen" id="s-disc3">
+    <div class="pill pill-disc">Discussion — 3 of 3</div>
+    <div class="dots" id="d8"></div>
+    <div class="card disc-card">
+      <p class="disc-number">Prompt 3 — Human Flourishing</p>
+      <p class="disc-title">Assessment or intervention — which is the real foundation?</p>
+      <p class="disc-text">Both Witmer and Jones moved psychology out of the laboratory and into the real world with the explicit goal of alleviating suffering and promoting flourishing. Looking at their two differing approaches — psychoeducational assessment vs. behavioral modification — which framework do you find more essential for building a strong foundation in modern clinical practice, and why?</p>
+      <p class="disc-cta">Head to Canvas and share your thoughts on this one.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  var spotScore = 0;
+  var wyrDone = 0;
+  var totalDots = 8;
+
+  function dots(id, cur) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var h = '';
+    for (var i = 0; i < 5; i++) {
+      if (i < cur) h += '<div class="dot done"></div>';
+      else if (i === cur) h += '<div class="dot cur"></div>';
+      else h += '<div class="dot"></div>';
+    }
+    el.innerHTML = h;
+  }
+
+  function discDots(id, cur) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var h = '';
+    for (var i = 0; i < 3; i++) {
+      if (i < cur) h += '<div class="dot disc"></div>';
+      else if (i === cur) h += '<div class="dot disc"></div>';
+      else h += '<div class="dot"></div>';
+    }
+    el.innerHTML = h;
+  }
+
+  function goTo(id) {
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+    var dotMap = {'s-wyr1':['d1',0],'s-wyr2':['d2',1],'s-spot1':['d3',2],'s-spot2':['d4',3],'s-spot3':['d5',4]};
+    if (dotMap[id]) dots(dotMap[id][0], dotMap[id][1]);
+    if (id === 's-disc1') discDots('d6', 0);
+    if (id === 's-disc2') discDots('d7', 1);
+    if (id === 's-disc3') discDots('d8', 2);
+    if (id === 's-final') showFinal();
+  }
+
+  function pickWyr(n, choice) {
+    var a = document.getElementById('w'+n+'a');
+    var b = document.getElementById('w'+n+'b');
+    a.classList.remove('sel-a','sel-b');
+    b.classList.remove('sel-a','sel-b');
+    if (choice === 'a') a.classList.add('sel-a');
+    else b.classList.add('sel-b');
+    document.getElementById('rb-wyr'+n).style.display = 'inline-block';
+    var t = document.getElementById('wt'+n);
+    if (t) t.textContent = choice === 'a' ? 'You picked Option A' : 'You picked Option B';
+  }
+
+  function revealWyr(n) {
+    document.getElementById('rv-wyr'+n).classList.add('show');
+    document.getElementById('rb-wyr'+n).style.display = 'none';
+    document.getElementById('nb-wyr'+n).style.display = 'inline-block';
+    wyrDone++;
+  }
+
+  function checkSpot(n, chosen, correct) {
+    var opts = document.getElementById('so'+n);
+    opts.classList.add('answered');
+    var btns = opts.querySelectorAll('.spot-btn');
+    var keys = ['witmer','jones','both'];
+    btns.forEach(function(btn, i) {
+      if (keys[i] === correct) btn.classList.add('correct');
+      else if (keys[i] === chosen && chosen !== correct) btn.classList.add('wrong');
+    });
+    if (chosen === correct) spotScore++;
+    document.getElementById('rv-spot'+n).classList.add('show');
+    document.getElementById('nb-spot'+n).style.display = 'inline-block';
+  }
+
+  function showFinal() {
+    document.getElementById('fs').textContent = spotScore + ' / 3';
+    document.getElementById('spot-chip').textContent = spotScore + ' / 3';
+    document.getElementById('wyr-chip').textContent = wyrDone + ' answered';
+    var msgs = [
+      "Tough batch — these distinctions are genuinely subtle. The scenarios are designed to blur the lines between the two pioneers.",
+      "Good eye. The tricky one is usually the second Spot — Jones's legacy without her exact mechanism is the kind of nuance that separates knowing the history from understanding it.",
+      "Nice. You caught all three — including the inhibitory learning asterisk on Jones. That's the kind of critical reading that makes for a strong clinician."
+    ];
+    document.getElementById('fm').textContent = msgs[Math.min(spotScore, 2)];
+  }
+</script>
+</body></html>
